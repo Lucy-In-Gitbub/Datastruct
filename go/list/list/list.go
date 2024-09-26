@@ -112,7 +112,7 @@ func Create(initValue any) Chain {
 	head := &Node{0, initValue, nil, nil}
 	tail := head
 	tail.Next = head
-	tail.Prev = nil
+	head.Prev = tail
 	hashlist := HashTable{10, make([][]Node, 10)}
 	hashlist.bucket[0] = append(hashlist.bucket[0], *head)
 	Chain := Chain{head, tail, hashlist, 0}
