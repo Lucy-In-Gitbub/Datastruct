@@ -8,6 +8,10 @@ type LinkedList[T comparable] interface {
 	// add a new node with value Val to the head of the list
 
 	Delete(Val T, index int) error
+
+	Begin() Iterator[T]
+
+	End() Iterator[T]
 }
 
 type Iterat[T comparable] interface {
@@ -16,6 +20,8 @@ type Iterat[T comparable] interface {
 	End() Iterator[T]
 
 	Next() Iterator[T]
+
+	Prev() Iterator[T]
 
 	Get() T
 

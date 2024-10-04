@@ -54,12 +54,14 @@ func (l *List[T]) Delete(Val T, index int) error {
 		if index < 0 || index >= len(p) {
 			return errors.New("index out of range")
 		} else {
+			// delete node
 			del := l.Hash[Val][index]
 			prev := del.Prev
 			next := del.Next
 			prev.Next = next
 			next.Prev = prev
 
+			//delete hash
 			l.Hash[Val] = append(l.Hash[Val][0:index], l.Hash[Val][index+1:]...)
 		}
 	} else {
@@ -93,6 +95,12 @@ func (Iter Iterator[T]) IsEmpty() bool {
 
 func (Iter Iterator[T]) Next() Iterator[T] {
 	Iter.Pointer = Iter.Pointer.Next
+
+	return Iter
+}
+
+func (Iter Iterator[T]) Prev() Iterator[T] {
+	Iter.Pointer = Iter.Pointer.Prev
 
 	return Iter
 }
