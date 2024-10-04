@@ -1,120 +1,106 @@
 package list
 
-import "fmt"
+import (
+	"errors"
+)
 
-type Chainfunc interface {
-	Tranversal()
-	Append(initValue any)
-	RemoveAt(index int)
-	Change(index int, value any)
-	Find(value any)
-	Check()
-}
-type Nodefunc interface {
-	Show()
+type ListNode[T comparable] struct {
+	Val  T
+	Next *ListNode[T]
+	Prev *ListNode[T]
 }
 
-type HashTableFunc interface {
-	CheckHash()
+type List[T comparable] struct {
+	Head *ListNode[T]
+	Tail *ListNode[T]
+	Hash map[T][]*ListNode[T]
 }
-type HashTable struct {
-	capacity int
-	bucket   [][]Node
-}
-
-type Node struct {
-	Index int
-	Value any
-	Next  *Node
-	Prev  *Node
-}
-type Chain struct {
-	Head   *Node
-	Tail   *Node
-	Hash   HashTable
-	Length int
+type Iterator[T comparable] struct {
+	Pointer *ListNode[T]
 }
 
-func (h HashTable) Hashfunc(Key int) int {
-	return Key % h.capacity
+func Create[T comparable](Val T) *List[T] {
+	head := &ListNode[T]{Prev: nil}
+	next := &ListNode[T]{Val: Val, Next: nil}
+	head.Next = next
+	next.Prev = head
+
+	hash := map[T][]*ListNode[T]{}
+	hash[Val] = append(hash[Val], next)
+
+	return &List[T]{head, next, hash}
 }
 
-func (n Node) Show() {
-	fmt.Println(n.Index, n.Value)
+func (l *List[T]) Find(Val T) ([]*ListNode[T], bool) {
+	p, ok := l.Hash[Val]
+
+	return p, ok
 }
 
-func (c *Chain) Tranversal() {
-	p := c.Head
-	for i := 0; i <= c.Length; i++ {
-		fmt.Println(p.Index, p.Value)
-		p = p.Next
-	}
+// head insert
+func (l *List[T]) Add(Val T) {
+	new := &ListNode[T]{Val: Val, Next: l.Head.Next}
+	next := l.Head.Next
+	next.Prev = new
+	l.Head.Next = new
+
+	l.Hash[Val] = append(l.Hash[Val], new)
 }
 
-func (c *Chain) Find(index int) *Node {
-	key := c.Hash.Hashfunc(index)
-	bucket := c.Hash.bucket[key]
-	for i, v := range bucket {
-		if v.Index == index {
-			fmt.Println(v.Index, v.Value)
-			x := &c.Hash.bucket[key][i]
-			return x
+func (l *List[T]) Delete(Val T, index int) error {
+	p, ok := l.Find(Val)
+
+	if ok {
+		if index < 0 || index >= len(p) {
+			return errors.New("index out of range")
+		} else {
+			// delete node
+			del := l.Hash[Val][index]
+			prev := del.Prev
+			next := del.Next
+			prev.Next = next
+			next.Prev = prev
+
+			//delete hash
+			l.Hash[Val] = append(l.Hash[Val][0:index], l.Hash[Val][index+1:]...)
 		}
+	} else {
+		return errors.New("not found")
 	}
-	fmt.Println("Not Found")
+
 	return nil
 }
 
-func (c *Chain) Check() {
-	p := c.Head
-	for i := 0; i <= c.Length; i++ {
-		fmt.Println(p)
-		p = p.Next
-	}
-	fmt.Println()
-	n := c.Tail
-	for i := 0; i < c.Length; i++ {
-		fmt.Println(n)
-		n = n.Prev
-	}
-}
-func (c *Chain) RemoveAt(index int) {
-	find := c.Find(index)
-	p := find.Prev
-	n := p.Next.Next
-	n.Prev = p
-	p.Next = n
-	c.Length--
+func (l *List[T]) Begin() Iterator[T] {
+	var Iter Iterator[T]
+	Iter.Pointer = l.Head.Next
+
+	return Iter
 }
 
-func (c *Chain) Append(initValue any) {
-	p := &Node{0, initValue, nil, nil}
-	p.Value = initValue
-	c.Tail.Next = p
-	p.Prev = c.Tail
-	c.Tail = p
-	c.Tail.Next = c.Head
-	c.Length++
-	p.Index = c.Length
-	key := c.Hash.Hashfunc(p.Index)
-	c.Hash.bucket[key] = append(c.Hash.bucket[key], *p)
+func (l *List[T]) End() Iterator[T] {
+	var Iter Iterator[T]
+	Iter.Pointer = l.Tail
+
+	return Iter
 }
 
-func (c HashTable) CheckHash() {
-	for i, v := range c.bucket {
-		for j, n := range v {
-			fmt.Println(i, j, n)
-		}
-	}
+func (Iter Iterator[T]) Get() T {
+	return Iter.Pointer.Val
 }
 
-func Create(initValue any) Chain {
-	head := &Node{0, initValue, nil, nil}
-	tail := head
-	tail.Next = head
-	head.Prev = tail
-	hashlist := HashTable{10, make([][]Node, 10)}
-	hashlist.bucket[0] = append(hashlist.bucket[0], *head)
-	Chain := Chain{head, tail, hashlist, 0}
-	return Chain
+func (Iter Iterator[T]) IsEmpty() bool {
+	return Iter.Pointer == nil
+}
+
+func (Iter Iterator[T]) Next() Iterator[T] {
+	Iter.Pointer = Iter.Pointer.Next
+
+	return Iter
+}
+
+func (Iter Iterator[T]) Prev() Iterator[T] {
+	Iter.Pointer = Iter.Pointer.Prev
+
+	return Iter
 }
