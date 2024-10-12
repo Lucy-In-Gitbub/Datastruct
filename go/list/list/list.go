@@ -15,6 +15,7 @@ type List[T comparable] struct {
 	Tail *ListNode[T]
 	Hash map[T][]*ListNode[T]
 }
+
 type Iterator[T comparable] struct {
 	Pointer *ListNode[T]
 }
